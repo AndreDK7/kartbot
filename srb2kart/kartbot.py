@@ -9,6 +9,17 @@ with open(
 ) as f:
 	config = json.loads(f.read())
 
+class Player():
+    def __init__(self, name, skin, color, spec):
+        self.name = name
+        self.skin = skin
+        self.color = color
+        self.spec = spec
+
+players_s = [range(1,16)]
+for x in range(1,16):
+    players_s.insert(x, Player("", "default", "", True))
+
 players_n = 0
 
 # CARREGA REGRAS REGEX PARA DETECTAR ATOS NO ARQUIVO DE LOG
@@ -100,7 +111,7 @@ async def info(ctx):
 		await asyncio.sleep(0.5)
 
 		for _ in range(5):
-			with open(f"{config['log_path']}", "r") as f:
+			with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
 				log = f.read().split("\n")[::-1]
 				state = 0
 				for line in log:
@@ -128,7 +139,7 @@ async def info(ctx):
 				else:
 					continue
 
-		with open(f"{config['log_path']}", "r") as f:
+		with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
 			log = f.read().split("\n")[::-1]
 			for line in log:
 				if line.startswith("[GAMETYPE] "):
@@ -205,10 +216,14 @@ async def chat_bridge():
 
 	while True:
 		try:
-			with open(f"{config['log_path']}", "r") as f:
+			with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
 				log = [l.strip() for l in f.readlines()]
 				if last_log_line != 0:
 					for line in log[last_log_line:]:
+						if line.startswith("[HITFEED] "):
+							await bot.get_channel(config["chat_bridge_channel_id"]).send(
+								"_" + line[10:].replace("_", "\_").replace("*","\*") + "_"
+							)
 						if line.startswith("<") and not line.startswith("<~SERVER> [D]"):
 							webhook_avatar_url = config["webhook_base_avatar_url"] + "default.png"
 							gameUsername = (
@@ -223,6 +238,10 @@ async def chat_bridge():
 								.replace("*", "\*")
 								.replace("`", "\`")
 							)
+							for x in range(1,16):
+								if (players_s[x].name == usrname or "@" + players_s[x].name == usrname) and not players_s[x].spec:
+									webhook_avatar_url = webhook_avatar_url[:-11] + players_s[x].skin + "_" + players_s[x].color + ".png"
+									break
 							# FALTANDO: configurar uso de avatares webhook para jogadores
 							webhook = SyncWebhook.from_url(config["webhook_url"])
 							try:
@@ -230,6 +249,33 @@ async def chat_bridge():
 							except Exception as e:
 								print(str(e))
 								continue
+						elif line.startswith("*") and line.endswith(")"):
+							players_n += 1
+							if players_n == 1:
+								players_s[1].spec = False
+						elif line.startswith("*") and line.endswith("left the game"):
+							players_n -= 1
+						elif line.startswith("*") and line.endswith("entered the game."):
+							name = line[:-18][1:]
+							for x in range(1,16):
+								if players_s[x].name == name:
+									players_s[x].spec = False
+									break
+						elif line.startswith("*") and line.endswith("became a spectator."):
+							name = line[:-20][1:]
+							for x in range(1,16):
+								if players_s[x].name == name:
+									players_s[x].spec = True
+									break
+                            
+						elif line.startswith("[CHAR] "):
+							color = line.split("[CHAR_COLOR] ")[1].split(" [")[0]
+							skin = line.split("[CHAR_SKIN] ")[1].split(" [NUMBER]")[0]
+							name = line.split("[NAME] ")[1]
+							num = int(line.split("[NUMBER]")[1].split("[NAME]")[0])
+							players_s[num].name = name
+							players_s[num].skin = skin
+							players_s[num].color = color
 						elif line.startswith("Map is now"):
 							mapname = (
 									line.split(":")[1]
@@ -250,7 +296,7 @@ async def chat_bridge():
 								print(str(e))
 								continue
 						elif line.startswith("[RESULTS] "):
-							with open(f"{config['log_path']}", "r") as f:
+							with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
 								log = f.read().split("\n")[::-1]
 	
 							data = {
