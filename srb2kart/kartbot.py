@@ -26,7 +26,6 @@ players_n = 0
 
 map_re = re.compile('Map is now "(.+)"')
 node_re = re.compile(r"^\d+:\s+(.+) - \d+ - \d+")
-node_ip_re = r"\*.+ has joined the game \(node {}\) \(([\d\.]+)[:\)]"
 action_re = re.compile(
 	r"^((\*.+ entered the game\.)|(\*.+ left the game)|(\*.+ has joined the game \(node \d+\))|(\*.+ renamed to [^\n]+)|(\*.+ became a spectator\.)|(.+ has finished the race\.)|(.+ ran out of time\.)|(The round has ended\.)|(Speeding off to level\.\.\.))"
 )
@@ -222,11 +221,37 @@ async def chat_bridge():
 					log = [l.strip() for l in f.readlines()]
 					if last_log_line != 0:
 						for line in log[last_log_line:]:
-							if line.startswith("[HITFEED] "):
+							if action_re.match(line) is not None:
+								if line.startswith("*") and line.endswith(")"):
+									players_n += 1
+									if players_n == 1:
+										players_s[1].spec = False
+									elif line.startswith("*") and line.endswith("left the game"):
+										players_n -= 1
+									elif line.startswith("*") and line.endswith("entered the game."):
+										name = line[:-18][1:]
+										for x in range(1,16):
+											if players_s[x].name == name:
+												players_s[x].spec = False
+												break
+									elif line.startswith("*") and line.endswith("became a spectator."):
+										name = line[:-20][1:]
+										for x in range(1,16):
+											if players_s[x].name == name:
+												players_s[x].spec = True
+												break
+								await bot.get_channel(config["chat_bridge_channel_id"]).send(
+									discord.utils.escape_mentions(
+										"*"
+										+ re.search(action_re, line).group(1).replace("*", "")
+										+ "*"
+									)
+								)
+							elif line.startswith("[HITFEED] "):
 								await bot.get_channel(config["chat_bridge_channel_id"]).send(
 									"_" + line[10:].replace("_", "\_").replace("*","\*") + "_"
 								)
-							if line.startswith("<") and not line.startswith("<~SERVER> [D]"):
+							elif line.startswith("<") and not line.startswith("<~SERVER> [D]"):
 								webhook_avatar_url = config["webhook_base_avatar_url"] + "default.png"
 								gameUsername = (
 									line.split(">")[0]
@@ -250,25 +275,6 @@ async def chat_bridge():
 								except Exception as e:
 									print(str(e))
 									continue
-							elif line.startswith("*") and line.endswith(")"):
-								players_n += 1
-								if players_n == 1:
-									players_s[1].spec = False
-							elif line.startswith("*") and line.endswith("left the game"):
-								players_n -= 1
-							elif line.startswith("*") and line.endswith("entered the game."):
-								name = line[:-18][1:]
-								for x in range(1,16):
-									if players_s[x].name == name:
-										players_s[x].spec = False
-										break
-							elif line.startswith("*") and line.endswith("became a spectator."):
-								name = line[:-20][1:]
-								for x in range(1,16):
-									if players_s[x].name == name:
-										players_s[x].spec = True
-										break
-								
 							elif line.startswith("[CHAR] "):
 								color = line.split("[CHAR_COLOR] ")[1].split(" [")[0]
 								skin = line.split("[CHAR_SKIN] ")[1].split(" [NUMBER]")[0]
@@ -336,14 +342,6 @@ async def chat_bridge():
 											"place": place,
 										}
 		
-										for line in log:
-											match = re.compile(node_ip_re.format(node)).match(
-												line
-											)
-											if match is not None:
-												data_player["ip"] = match.group(1)
-												break
-		
 										data["players"].append(data_player)
 		
 										minutes = int(time / 35 / 60)
@@ -374,14 +372,6 @@ async def chat_bridge():
 								except Exception as e:
 									print(str(e))
 									continue
-							elif action_re.match(line) is not None:
-								await bot.get_channel(config["chat_bridge_channel_id"]).send(
-									discord.utils.escape_mentions(
-										"*"
-										+ re.search(action_re, line).group(1).replace("*", "")
-										+ "*"
-									)
-								)
 					last_log_line = len(log)
 				await asyncio.sleep(2)
 			except:
