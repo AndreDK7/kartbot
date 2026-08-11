@@ -1,6 +1,6 @@
-import asyncio, discord, json, os, pathlib, psutil, re, subprocess, time
+import asyncio, discord, json, os, pathlib, psutil, re, subprocess, time, aiohttp
 from discord.ext import commands
-from discord import SyncWebhook
+from discord import Webhook
 
 # CARREGA O ARQUIVO DE CONFIGURAÇÃO
 
@@ -212,180 +212,181 @@ async def restart(ctx):
 # Trecho original por Deagahelio, Goulart e Fafabis
 
 async def chat_bridge():
+	global players_n
 	global last_log_line
+	async with aiohttp.ClientSession() as session:
 
-	while True:
-		try:
-			with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
-				log = [l.strip() for l in f.readlines()]
-				if last_log_line != 0:
-					for line in log[last_log_line:]:
-						if line.startswith("[HITFEED] "):
-							await bot.get_channel(config["chat_bridge_channel_id"]).send(
-								"_" + line[10:].replace("_", "\_").replace("*","\*") + "_"
-							)
-						if line.startswith("<") and not line.startswith("<~SERVER> [D]"):
-							webhook_avatar_url = config["webhook_base_avatar_url"] + "default.png"
-							gameUsername = (
-								line.split(">")[0]
-								.replace("<", "")
-							)
-							msg = (
-								line.split(">")[1]
-								.replace("@everyone","~~@~~everyone")
-								.replace("@here","~~@~~here")
-								.replace("_", "\_")
-								.replace("*", "\*")
-								.replace("`", "\`")
-							)
-							for x in range(1,16):
-								if (players_s[x].name == usrname or "@" + players_s[x].name == usrname) and not players_s[x].spec:
-									webhook_avatar_url = webhook_avatar_url[:-11] + players_s[x].skin + "_" + players_s[x].color + ".png"
-									break
-							# FALTANDO: configurar uso de avatares webhook para jogadores
-							webhook = SyncWebhook.from_url(config["webhook_url"])
-							try:
-								webhook.send(msg, username=gameUsername, avatar_url=webhook_avatar_url)
-							except Exception as e:
-								print(str(e))
-								continue
-						elif line.startswith("*") and line.endswith(")"):
-							players_n += 1
-							if players_n == 1:
-								players_s[1].spec = False
-						elif line.startswith("*") and line.endswith("left the game"):
-							players_n -= 1
-						elif line.startswith("*") and line.endswith("entered the game."):
-							name = line[:-18][1:]
-							for x in range(1,16):
-								if players_s[x].name == name:
-									players_s[x].spec = False
-									break
-						elif line.startswith("*") and line.endswith("became a spectator."):
-							name = line[:-20][1:]
-							for x in range(1,16):
-								if players_s[x].name == name:
-									players_s[x].spec = True
-									break
-                            
-						elif line.startswith("[CHAR] "):
-							color = line.split("[CHAR_COLOR] ")[1].split(" [")[0]
-							skin = line.split("[CHAR_SKIN] ")[1].split(" [NUMBER]")[0]
-							name = line.split("[NAME] ")[1]
-							num = int(line.split("[NUMBER]")[1].split("[NAME]")[0])
-							players_s[num].name = name
-							players_s[num].skin = skin
-							players_s[num].color = color
-						elif line.startswith("Map is now"):
-							mapname = (
-									line.split(":")[1]
-									.replace("\"", "")
-									)
-							mapid = (
-									line.split(":")[0]
-									.replace("Map is now \"","")
-									)
-							embed = discord.Embed(color=0x000099E1)
-							embed.title = mapid + ":" + mapname
-							embed.set_image(url=f"{config['track_images_url']}" + mapid + "-kart.png")
-							try:
-								await bot.get_channel(
-									config["chat_bridge_channel_id"]
-								).send(embed=embed)
-							except Exception as e:
-								print(str(e))
-								continue
-						elif line.startswith("[RESULTS] "):
-							with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
-								log = f.read().split("\n")[::-1]
-	
-							data = {
-								"map": "???",
-								"players": [],
-							}
-	
-							players = list(
-								filter(
-									lambda x: x[-1] == "false" and x[-2] == "false",
-									[player.split(":") for player in line.split(";")[1:-1]],
+		while True:
+			try:
+				with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
+					log = [l.strip() for l in f.readlines()]
+					if last_log_line != 0:
+						for line in log[last_log_line:]:
+							if line.startswith("[HITFEED] "):
+								await bot.get_channel(config["chat_bridge_channel_id"]).send(
+									"_" + line[10:].replace("_", "\_").replace("*","\*") + "_"
 								)
-							)
-							for player in players:
-								player[3] = int(player[3])
-							contest = list(
-								sorted(
-									filter(lambda x: x[3] != 0, players), key=lambda x: x[3]
+							if line.startswith("<") and not line.startswith("<~SERVER> [D]"):
+								webhook_avatar_url = config["webhook_base_avatar_url"] + "default.png"
+								gameUsername = (
+									line.split(">")[0]
+									.replace("<", "")
 								)
-							)
-							no_contest = list(filter(lambda x: x[3] == 0, players))
-							players = contest + no_contest
-							results_left = []
-							results_right = []
-							for i, player in enumerate(players):
-								node = int(player[0])
-								time = int(player[3])
-								place = min(i, len(contest)) + 1
-								name = player[1]
-	
-								results_left.append(f"{place}. {name}")
-								if time != 0:
-									data_player = {
-										"name": name,
-										"time": time,
-										"place": place,
-									}
-	
-									for line in log:
-										match = re.compile(node_ip_re.format(node)).match(
-											line
+								msg = (
+									line.split(">")[1]
+									.replace("@everyone","~~@~~everyone")
+									.replace("@here","~~@~~here")
+									.replace("_", "\_")
+									.replace("*", "\*")
+									.replace("`", "\`")
+								)
+								for x in range(1,16):
+									if (players_s[x].name == gameUsername or "@" + players_s[x].name == gameUsername) and not players_s[x].spec:
+										webhook_avatar_url = webhook_avatar_url[:-11] + players_s[x].skin + "_" + players_s[x].color + ".png"
+										break
+								webhook = Webhook.from_url(config["webhook_url"], session=session)
+								try:
+									await webhook.send(msg, username=gameUsername, avatar_url=webhook_avatar_url)
+								except Exception as e:
+									print(str(e))
+									continue
+							elif line.startswith("*") and line.endswith(")"):
+								players_n += 1
+								if players_n == 1:
+									players_s[1].spec = False
+							elif line.startswith("*") and line.endswith("left the game"):
+								players_n -= 1
+							elif line.startswith("*") and line.endswith("entered the game."):
+								name = line[:-18][1:]
+								for x in range(1,16):
+									if players_s[x].name == name:
+										players_s[x].spec = False
+										break
+							elif line.startswith("*") and line.endswith("became a spectator."):
+								name = line[:-20][1:]
+								for x in range(1,16):
+									if players_s[x].name == name:
+										players_s[x].spec = True
+										break
+								
+							elif line.startswith("[CHAR] "):
+								color = line.split("[CHAR_COLOR] ")[1].split(" [")[0]
+								skin = line.split("[CHAR_SKIN] ")[1].split(" [NUMBER]")[0]
+								name = line.split("[NAME] ")[1]
+								num = int(line.split("[NUMBER]")[1].split("[NAME]")[0])
+								players_s[num].name = name
+								players_s[num].skin = skin
+								players_s[num].color = color
+							elif line.startswith("Map is now"):
+								mapname = (
+										line.split(":")[1]
+										.replace("\"", "")
 										)
-										if match is not None:
-											data_player["ip"] = match.group(1)
-											break
-	
-									data["players"].append(data_player)
-	
-									minutes = int(time / 35 / 60)
-									seconds = int(time / 35 % 60)
-									hundredths = int((time / 35) % 1 * 100)
-									results_right.append(
-										f"{minutes}' {seconds}'' {hundredths}"
+								mapid = (
+										line.split(":")[0]
+										.replace("Map is now \"","")
+										)
+								embed = discord.Embed(color=0x000099E1)
+								embed.title = mapid + ":" + mapname
+								embed.set_image(url=f"{config['track_images_url']}" + mapid + "-kart.png")
+								try:
+									await bot.get_channel(
+										config["chat_bridge_channel_id"]
+									).send(embed=embed)
+								except Exception as e:
+									print(str(e))
+									continue
+							elif line.startswith("[RESULTS] "):
+								with open(f"{config['log_path']}", "r", encoding='utf8', errors='ignore') as f:
+									log = f.read().split("\n")[::-1]
+		
+								data = {
+									"map": "???",
+									"players": [],
+								}
+		
+								players = list(
+									filter(
+										lambda x: x[-1] == "false" and x[-2] == "false",
+										[player.split(":") for player in line.split(";")[1:-1]],
 									)
-								else:
-									results_right.append("-")
-	
-							embed = discord.Embed(color=0x000099E1)
-
-							embed.add_field(
-								name="Resultados",
-								value="\n".join(results_left),
-								inline=True,
-							)
-							embed.add_field(
-								name="\u200B",
-								value="\n".join(results_right),
-								inline=True,
-							)
-							try:
-								await bot.get_channel(
-									config["chat_bridge_channel_id"]
-								).send(embed=embed)
-							except Exception as e:
-								print(str(e))
-								continue
-						elif action_re.match(line) is not None:
-							await bot.get_channel(config["chat_bridge_channel_id"]).send(
-								discord.utils.escape_mentions(
-									"*"
-									+ re.search(action_re, line).group(1).replace("*", "")
-									+ "*"
 								)
-							)
-				last_log_line = len(log)
-			await asyncio.sleep(2)
-		except:
-			await asyncio.sleep(2)
-			pass
+								for player in players:
+									player[3] = int(player[3])
+								contest = list(
+									sorted(
+										filter(lambda x: x[3] != 0, players), key=lambda x: x[3]
+									)
+								)
+								no_contest = list(filter(lambda x: x[3] == 0, players))
+								players = contest + no_contest
+								results_left = []
+								results_right = []
+								for i, player in enumerate(players):
+									node = int(player[0])
+									time = int(player[3])
+									place = min(i, len(contest)) + 1
+									name = player[1]
+		
+									results_left.append(f"{place}. {name}")
+									if time != 0:
+										data_player = {
+											"name": name,
+											"time": time,
+											"place": place,
+										}
+		
+										for line in log:
+											match = re.compile(node_ip_re.format(node)).match(
+												line
+											)
+											if match is not None:
+												data_player["ip"] = match.group(1)
+												break
+		
+										data["players"].append(data_player)
+		
+										minutes = int(time / 35 / 60)
+										seconds = int(time / 35 % 60)
+										hundredths = int((time / 35) % 1 * 100)
+										results_right.append(
+											f"{minutes}' {seconds}'' {hundredths}"
+										)
+									else:
+										results_right.append("-")
+		
+								embed = discord.Embed(color=0x000099E1)
+
+								embed.add_field(
+									name="Resultados",
+									value="\n".join(results_left),
+									inline=True,
+								)
+								embed.add_field(
+									name="\u200B",
+									value="\n".join(results_right),
+									inline=True,
+								)
+								try:
+									await bot.get_channel(
+										config["chat_bridge_channel_id"]
+									).send(embed=embed)
+								except Exception as e:
+									print(str(e))
+									continue
+							elif action_re.match(line) is not None:
+								await bot.get_channel(config["chat_bridge_channel_id"]).send(
+									discord.utils.escape_mentions(
+										"*"
+										+ re.search(action_re, line).group(1).replace("*", "")
+										+ "*"
+									)
+								)
+					last_log_line = len(log)
+				await asyncio.sleep(2)
+			except:
+				await asyncio.sleep(2)
+				pass
 
 # PONTE DISCORD-SRB2KART
 # Trecho original por Deagahelio
