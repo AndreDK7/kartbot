@@ -44,6 +44,7 @@ Essas configurações são referentes ao arquivo `kartbot_config.json`
 - `allowed_roles` - Lista de cargos que tem permissão aos [comandos de Admin](#admin)
 
 - `log_path` - Caminho para o log do servidor - `/caminho/do/srb2kart/latest-log.txt`
+- `ban_txt_File` - Caminho para o arquivo de banimentos do servidor - `/caminho/do/srb2kart/ban.txt` - Mantenha em `false` caso não queira apagar o arquivo de banimentos do servidor após reiniciar o mesmo pelo bot.
 
 - `chat_bridge` - Define se a ponte entre o Discord e o servidor será ativo ou não - `true` ou `false`
 - `chat_bridge_channel_id` - ID do canal de ponte no Discord
