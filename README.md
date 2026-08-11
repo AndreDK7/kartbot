@@ -1,10 +1,10 @@
-# kartbot
+# Kartbot
 
 Fork do bot de discord feito originalmente por deagahelio e anteriormente mantido por riomccloud.
 
 ## Dependências
 
-- Python 3.8+ (+ `discord.py`, `psutil`)
+- Python 3.8+ (+ `discord.py`, `psutil`, `aiohttp`)
 - `tmux`
 - `stuff`
 
@@ -16,15 +16,17 @@ Fork do bot de discord feito originalmente por deagahelio e anteriormente mantid
 
 - Crie um venv para o bot utilizando `python3.9 -m venv .venv`. Faça isso de preferência na mesma pasta onde está localizado o bot
 - Execute o venv utilizando `source .venv/bin/activate`
-- Instale as dependências do bot utilizando o `pip3`
+- Instale as dependências do bot utilizando o `pip3 install -r requirements.txt`. Use esse comando na pasta raiz do repositório
 - Copie o arquivo `kartbot_config.template.json` para `kartbot_config.json` e defina os valores apropriados
-- Inicie o servidor usando `tmux new -d -s server /caminho/do/srb2kart -dedicated &`
+- Copie os arquivos `uglyhitfeed.lua` e `notify_skin_change0.lua` para a pasta `addons` do seu jogo
+- Inicie o servidor usando `tmux new -d -s server /caminho/do/srb2kart -dedicated -file uglyhitfeed.lua notify_skin_change0.lua &`
 - Execute `python3.9 kartbot.py`
 
 ## Configuração
 
+Essas configurações são referentes ao arquivo `kartbot_config.json`
+
 - `prefix` - Prefixo usado para os comandos do bot
-- `description` - Descrição do bot que aparece no comando de ajuda
 - `token` - Token do bot
 
 
@@ -51,8 +53,18 @@ Fork do bot de discord feito originalmente por deagahelio e anteriormente mantid
 - `k!ip` - Manda o IP do servidor
 - `k!info` - Manda informações sobre o servidor e os jogadores conectados
 
-### Admin
+## Admin
 
 - `k!restart` - Reinicia o servidor
 - `k!command|comando <comando>` - Executa um comando, por exemplo: `k!command map 01`
 
+## Avançado
+
+- Caso queira editar o IP dos servidores que aparecem no comando `k!ip` abra o `kartbot.py` no seu editor de texto preferido e a partir da `linha 63` você consegue definir o IP dos servidorees que serão exibidos através do comando
+
+## Créditos
+
+- `deagahelio` pela versão original do kartbot
+- `riomccloud` por manter online um fork baseado na versão mais recente do `discord.py`
+- `raphaelgoulart` por me ajudar com o webhook dos avatares e com as mensagens na ponte
+- `Indev450` por me ajudar a implementar o suporte ao HITFEED na ponte e o suporte ao webhook dos avatares
