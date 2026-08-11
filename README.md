@@ -22,6 +22,10 @@ Fork do bot de discord feito originalmente por deagahelio e anteriormente mantid
 - Inicie o servidor usando `tmux new -d -s server /caminho/do/srb2kart -dedicated -file uglyhitfeed.lua notify_skin_change0.lua &`
 - Execute `python3.9 kartbot.py`
 
+## Nota sobre o hitfeed para o Discord
+
+Para que os emojis funcionem no hitfeed do Discord é necessário que eles sejam configurados no addon `uglyhitfeed.lua`. No bloco `local function getDiscordEmoji(sprite)` você irá encontrar para cada linha um item diferente do jogo base. Para cada item um emoji precisa ser associado utilizando o ID do mesmo. A melhor forma de adicionar emojis para o Kartbot é através do portal de desenvoldor do Discord, na aba `Emojis`. Ao adicionar um emoji para um item você terá na coluna `ID DO EMOJI` o ID do emoji recém adicionado. Logo ao lado desse ID você terá um botão de copiar. Clicando nesse botão você irá copiar o emoji já formatado para o `uglyhitfeed` no seguinte formato: `<emoji:0123456789012345678>`. Cole ele por cima do modelo no addon. Por exemplo: para o item `Grow` você teria um emoji com o nome `Grow` e ID `<Grow:0123456789012345678>`. O ID desse emoji deve ser colado por cima de `<:KISGROW:>` no addon. 
+
 ## Configuração
 
 Essas configurações são referentes ao arquivo `kartbot_config.json`
