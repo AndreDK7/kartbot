@@ -12,6 +12,7 @@
 	"allowed_roles": ["Admin", "Mod"],
 	
 	"log_path": "/caminho/do/jogo/log.txt",
+	"ban_txt_File": false,
 
 	"chat_bridge": true,
 	"chat_bridge_channel_id": 0123,

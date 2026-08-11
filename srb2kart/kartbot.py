@@ -202,6 +202,7 @@ async def command(ctx, *, cmd):
 @bot.command(checks=[is_admin])
 async def restart(ctx):
 	os.system(f"pkill {config['server_executable_name']} && tmux kill-session -t {config['tmux_name']}")
+	if (config["ban_txt_File"]): os.remove(config["ban_txt_File"])
 	os.system(
 		f"bash {config['server_script_path']}"
 	)
