@@ -414,6 +414,7 @@ async def on_message(message):
 					.replace("\n", "")
 					.replace(";", "")
 				)
+				text = text.encode('ascii', 'ignore').decode('ascii') # Remover caracteres non-ASCII pro jogo não crashar lol
 				path = config["server_folder_path"] + f"tmp/tmp{message.id}.cfg"
 				with open(path, "w") as f:
 					f.write(f"say [D] {message.author.name}: {text}")
