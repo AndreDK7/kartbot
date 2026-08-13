@@ -18,8 +18,8 @@ Fork do bot de Discord feito originalmente por deagahelio e anteriormente mantid
 - Execute o venv utilizando `source .venv/bin/activate`
 - Instale as dependências do bot utilizando o `pip3 install -r requirements.txt`. Use esse comando na pasta raiz do repositório
 - Copie o arquivo `kartbot_config.template.json` para `kartbot_config.json` e defina os valores apropriados
-- Copie os arquivos `uglyhitfeed.lua` e `notify_skin_change0.lua` para a pasta `addons` do seu jogo
-- Inicie o servidor usando `tmux new -d -s server /caminho/do/srb2kart -dedicated -file uglyhitfeed.lua notify_skin_change0.lua &`
+- Copie os arquivos `uglyhitfeed.lua`, `notify_skin_change0.lua` e `printresults.lua` para a pasta `addons` do seu jogo
+- Inicie o servidor usando `tmux new -d -s server /caminho/do/srb2kart -dedicated -file uglyhitfeed.lua notify_skin_change0.lua printresults.lua &`
 - Execute `python3.9 kartbot.py`
 
 ## Nota sobre o hitfeed para o Discord
