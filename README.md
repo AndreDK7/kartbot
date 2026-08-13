@@ -1,6 +1,6 @@
 # Kartbot
 
-Fork do bot de discord feito originalmente por deagahelio e anteriormente mantido por riomccloud.
+Fork do bot de Discord feito originalmente por deagahelio e anteriormente mantido por riomccloud.
 
 ## Dependências
 
