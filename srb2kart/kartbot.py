@@ -241,10 +241,21 @@ async def chat_bridge():
 											if players_s[x].name == name:
 												players_s[x].spec = True
 												break
+								message = re.search(action_re, line).group(1).replace("*", "")
+								# manipular o texto da mensagem aqui
+								message = message.replace("entered the game", "entrou na corrida")
+								message = message.replace("left the game", "saiu do jogo")
+								message = message.replace("has joined the game", "entrou no jogo")
+								message = message.replace("renamed to", "alterou o nome para")
+								message = message.replace("became a spectator", "se tornou um espectador")
+								message = message.replace("has finished the race", "terminou a corrida")
+								message = message.replace("ran out of time", "não terminou a corrida")
+								message = message.replace("The round has ended.", "**A corrida terminou!**")
+								message = message.replace("Speeding off to level...", "**Acelerando para a próxima corrida!**")
 								await bot.get_channel(config["chat_bridge_channel_id"]).send(
 									discord.utils.escape_mentions(
 										"*"
-										+ re.search(action_re, line).group(1).replace("*", "")
+										+ message
 										+ "*"
 									)
 								)
