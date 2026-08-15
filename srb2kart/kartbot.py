@@ -249,7 +249,7 @@ async def chat_bridge():
 								message = message.replace("renamed to", "alterou o nome para")
 								message = message.replace("became a spectator", "se tornou um espectador")
 								message = message.replace("has finished the race", "terminou a corrida")
-								message = message.replace("ran out of time", "não terminou a corrida")
+								message = message.replace("ran out of time", "ficou sem tempo")
 								message = message.replace("The round has ended.", "**A corrida terminou!**")
 								message = message.replace("Speeding off to level...", "**Acelerando para a próxima corrida!**")
 								await bot.get_channel(config["chat_bridge_channel_id"]).send(
