@@ -365,7 +365,7 @@ async def chat_bridge():
 									else:
 										results_right.append("-")
 		
-								embed = discord.Embed(color=0x000099E1)
+								embed = discord.Embed(color=0x00FF000)
 
 								embed.add_field(
 									name="Resultados",
