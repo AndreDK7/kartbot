@@ -227,20 +227,20 @@ async def chat_bridge():
 									players_n += 1
 									if players_n == 1:
 										players_s[1].spec = False
-									elif line.startswith("*") and line.endswith("left the game"):
-										players_n -= 1
-									elif line.startswith("*") and line.endswith("entered the game."):
-										name = line[:-18][1:]
-										for x in range(1,16):
-											if players_s[x].name == name:
-												players_s[x].spec = False
-												break
-									elif line.startswith("*") and line.endswith("became a spectator."):
-										name = line[:-20][1:]
-										for x in range(1,16):
-											if players_s[x].name == name:
-												players_s[x].spec = True
-												break
+								elif line.startswith("*") and line.endswith("left the game"):
+									players_n -= 1
+								elif line.startswith("*") and line.endswith("entered the game."):
+									name = line[:-18][1:]
+									for x in range(1,16):
+										if players_s[x].name == name:
+											players_s[x].spec = False
+											break
+								elif line.startswith("*") and line.endswith("became a spectator."):
+									name = line[:-20][1:]
+									for x in range(1,16):
+										if players_s[x].name == name:
+											players_s[x].spec = True
+											break
 								message = re.search(action_re, line).group(1).replace("*", "")
 								# manipular o texto da mensagem aqui
 								message = message.replace("entered the game", "entrou na corrida")
