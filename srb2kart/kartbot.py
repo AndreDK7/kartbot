@@ -222,7 +222,32 @@ async def chat_bridge():
 					log = [l.strip() for l in f.readlines()]
 					if last_log_line != 0:
 						for line in log[last_log_line:]:
-							if action_re.match(line) is not None:
+							if line.startswith("<"):
+								if not line.startswith("<~SERVER> [D]"):
+									webhook_avatar_url = config["webhook_base_avatar_url"] + "default.png"
+									gameUsername = (
+										line.split(">")[0]
+										.replace("<", "")
+									)
+									msg = (
+										line.split(">")[1]
+										.replace("@everyone","~~@~~everyone")
+										.replace("@here","~~@~~here")
+										.replace("_", "\_")
+										.replace("*", "\*")
+										.replace("`", "\`")
+									)
+									for x in range(1,16):
+										if (players_s[x].name == gameUsername or "@" + players_s[x].name == gameUsername) and not players_s[x].spec:
+											webhook_avatar_url = webhook_avatar_url[:-11] + players_s[x].skin + "_" + players_s[x].color + ".png"
+											break
+									webhook = Webhook.from_url(config["webhook_url"], session=session)
+									try:
+										await webhook.send(msg, username=gameUsername, avatar_url=webhook_avatar_url)
+									except Exception as e:
+										print(str(e))
+										continue
+							elif action_re.match(line) is not None:
 								if line.startswith("*") and line.endswith(")"):
 									players_n += 1
 									if players_n == 1:
@@ -263,30 +288,6 @@ async def chat_bridge():
 								await bot.get_channel(config["chat_bridge_channel_id"]).send(
 									"_" + line[10:].replace("_", "\_").replace("*","\*") + "_"
 								)
-							elif line.startswith("<") and not line.startswith("<~SERVER> [D]"):
-								webhook_avatar_url = config["webhook_base_avatar_url"] + "default.png"
-								gameUsername = (
-									line.split(">")[0]
-									.replace("<", "")
-								)
-								msg = (
-									line.split(">")[1]
-									.replace("@everyone","~~@~~everyone")
-									.replace("@here","~~@~~here")
-									.replace("_", "\_")
-									.replace("*", "\*")
-									.replace("`", "\`")
-								)
-								for x in range(1,16):
-									if (players_s[x].name == gameUsername or "@" + players_s[x].name == gameUsername) and not players_s[x].spec:
-										webhook_avatar_url = webhook_avatar_url[:-11] + players_s[x].skin + "_" + players_s[x].color + ".png"
-										break
-								webhook = Webhook.from_url(config["webhook_url"], session=session)
-								try:
-									await webhook.send(msg, username=gameUsername, avatar_url=webhook_avatar_url)
-								except Exception as e:
-									print(str(e))
-									continue
 							elif line.startswith("[CHAR] "):
 								color = line.split("[CHAR_COLOR] ")[1].split(" [")[0]
 								skin = line.split("[CHAR_SKIN] ")[1].split(" [NUMBER]")[0]
