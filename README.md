@@ -67,6 +67,10 @@ Essas configurações são referentes ao arquivo `kartbot_config.json`
 
 - Caso queira editar o IP dos servidores que aparecem no comando `k!ip` abra o `kartbot.py` no seu editor de texto preferido e a partir da `linha 63` você consegue definir o IP dos servidorees que serão exibidos através do comando
 
+## Limpo de IA
+
+Esse projeto não possui uso de IA em nenhuma parte de seu cógido. Tudo foi redigido com código humano. O uso de IA nesse projeto, seja para vibe coding ou para correções, não é apoiado. Forks que usem IA de qualquer forma não receberão suporte.
+
 ## Créditos
 
 - `deagahelio` pela versão original do kartbot
