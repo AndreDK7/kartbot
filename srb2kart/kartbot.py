@@ -250,8 +250,18 @@ async def chat_bridge():
 							elif action_re.match(line) is not None:
 								if line.startswith("*") and line.endswith(")"):
 									players_n += 1
+									name = line[1:].split(" has joined the game ")[0]
+									players_s[players_n].name = name
 									if players_n == 1:
 										players_s[1].spec = False
+									else:
+										allSpec = True
+										for x in range(1,players_n):
+											if not players_s[x].spec:
+												allSpec = False
+												break
+										if allSpec:
+											players_s[players_n].spec = False
 								elif line.startswith("*") and line.endswith("left the game"):
 									players_n -= 1
 								elif line.startswith("*") and line.endswith("entered the game."):
@@ -266,6 +276,13 @@ async def chat_bridge():
 										if players_s[x].name == name:
 											players_s[x].spec = True
 											break
+								elif line.startswith("*") and " renamed to " in line:
+									txt_split = line[1:].split(" renamed to ")
+									name_before = txt_split[0]
+									name_after = txt_split[1]
+									for x in range(1,16):
+										if players_s[x].name == name_before:
+											players_s[x].name = name_after
 								message = re.search(action_re, line).group(1).replace("*", "")
 								# manipular o texto da mensagem aqui
 								message = message.replace("entered the game", "entrou na corrida")
